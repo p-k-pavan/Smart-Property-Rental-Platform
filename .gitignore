@@ -1,0 +1,30 @@
+# Root-level ignore for both client and server
+
+# Node modules (client & server)
+client/node_modules/
+server/node_modules/
+
+
+# Production builds
+client/build/
+server/build/
+
+# Testing coverage reports
+coverage/
+
+# Environment files (any .env variant)
+*.env
+.env.*
+client/.env
+server/.env
+
+# System files
+.DS_Store
+
+# Log files
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# PnP
+.pnp.*

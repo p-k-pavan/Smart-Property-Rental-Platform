@@ -8,6 +8,7 @@ const cors = require("cors");
 
 dotenv.config();
 const authRoutes = require("./routes/auth.routes");
+const propertyRoutes = require("./routes/property.routes");
 
 mongoose
   .connect(process.env.MONGODB, { serverSelectionTimeoutMS: 30000 })
@@ -26,6 +27,7 @@ app.use(express.json());
 app.use(cookieParser());
 
 app.use("/api/auth", authRoutes);
+app.use("/api/properties",propertyRoutes)
 
 app.get("/", (req, res) => {
   res.send("API is running");

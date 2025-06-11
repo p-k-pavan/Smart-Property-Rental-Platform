@@ -21,6 +21,10 @@ const userSchema = new Schema(
       required: true,
       enum: ["tenant", "admin", "owner"],
     },
+    isBlocked: {
+    type: Boolean,
+    default: false,
+  },
   },
   { timestamps: true }
 );

@@ -71,7 +71,10 @@ export default function SignIn() {
         _id: response.data.user._id,
         name: response.data.user.name,
         email: response.data.user.email,
-        role: response.data.user.role
+        role: response.data.user.role,
+        createdAt: response.data.user.createdAt,
+        updatedAt: response.data.user.updatedAt
+
       }));
       localStorage.setItem('user', JSON.stringify({
         _id: response.data.user._id,
@@ -81,7 +84,7 @@ export default function SignIn() {
       }));
 
       setTimeout(() => {
-        navigate('/dashboard');
+        navigate('/');
       }, 3000);
     } catch (error) {
 

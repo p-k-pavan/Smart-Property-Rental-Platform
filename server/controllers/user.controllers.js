@@ -3,9 +3,8 @@ const bcrypt = require("bcrypt");
 const errorHandler = require("../utils/error.js");
 
 const updateProfile = async (req, res, next) => {
-  const userId = req.user.id; 
+  const userId = req.user.id;
   const { name, email, password, role } = req.body;
-  const updatedFields = [];
 
   try {
     const user = await User.findById(userId);
@@ -13,46 +12,30 @@ const updateProfile = async (req, res, next) => {
       return next(errorHandler(404, "User not found"));
     }
 
-    
-    if (name && name !== user.name) {
-      user.name = name;
-      updatedFields.push("name");
-    }
+    const updatedData = {};
 
-  
-    if (email && email !== user.email) {
-      const existingUser = await User.findOne({ email });
-      if (existingUser) {
-        return next(errorHandler(409, "Email is already in use"));
-      }
-      user.email = email;
-      updatedFields.push("email");
-    }
+    if (name) updatedData.name = name;
+    if (email) updatedData.email = email;
+    if (role) updatedData.role = role;
 
-  
-    if (role && role !== user.role) {
-      user.role = role;
-      updatedFields.push("role");
-    }
-
-  
     if (password) {
       const isSame = bcrypt.compareSync(password, user.password);
       if (!isSame) {
-        user.password = bcrypt.hashSync(password, 10);
-        updatedFields.push("password");
+        updatedData.password = bcrypt.hashSync(password, 10);
       }
     }
 
-    if (updatedFields.length === 0) {
-      return res.status(200).json({ message: "No changes detected" });
-    }
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { $set: updatedData },
+      { new: true }
+    );
 
-    await user.save();
+    const { password: pass, ...rest } = updatedUser._doc;
 
     res.status(200).json({
       message: "Profile updated successfully",
-      updatedFields,
+      user: rest,
     });
   } catch (err) {
     next(err);

@@ -80,7 +80,7 @@ const Navbar = () => {
             {/* Owner-specific link */}
             {currentUser?.role === 'owner' && (
               <Link
-                to="/create-property"
+                to="/CreateProperty"
                 className="flex items-center text-gray-700 hover:text-blue-600 text-sm font-medium transition-colors"
               >
                 <FaPlus className="mr-1" /> Create

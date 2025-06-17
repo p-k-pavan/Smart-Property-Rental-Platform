@@ -4,38 +4,67 @@ const errorHandler = require("../utils/error.js");
 const mongoose = require("mongoose");
 
 const createProperty = async (req, res, next) => {
-  const { title, price, location, image, description, amenities, ownerId } = req.body;
-
-  if (!title || !price || !location || !image || !description || !ownerId) {
-    return next(errorHandler(400, "All required fields must be filled"));
-  }
-
-  if (!Array.isArray(image) || image.length === 0) {
-    return next(errorHandler(400, "At least one image is required"));
-  }
-
-  if (!mongoose.Types.ObjectId.isValid(ownerId)) {
-    return next(errorHandler(400, "Invalid owner ID"));
-  }
-
   try {
-    const user = await User.findById(ownerId);
-    if (!user) {
-      return next(errorHandler(404, "User not found"));
+    const {
+      title,
+      price,
+      location,
+      description,
+      amenities,
+      ownerId,
+      propertyType,
+      availableFrom,
+      bedrooms,
+      bathrooms,
+      elevator,
+      sqfeet
+    } = req.body;
+
+    console.log("Uploaded files:", req.files);
+  
+    if (
+      !title || !price || !location || !description || !ownerId ||
+      !propertyType || elevator === undefined || !sqfeet
+    ) {
+      return next(errorHandler(400, "All required fields must be provided"));
     }
 
-    if (user.role !== "owner" && user.role !== "admin") {
-      return next(errorHandler(403, "Only owners or admins can create property listings"));
+    if (!req.files || req.files.length === 0) {
+      return next(errorHandler(400, "At least one image is required"));
     }
-    const listing = await Property.create(req.body);
-    res.status(201).json({
-      success: true,
-      data: listing,
+
+    const user = await User.findById(ownerId);
+    if (!user) return next(errorHandler(404, "User not found"));
+    if (user.role !== "owner" && user.role !== "admin") {
+      return next(errorHandler(403, "Unauthorized"));
+    }
+
+    const parsedAmenities = Array.isArray(amenities) ? amenities : [amenities];
+
+    const imageUrls = req.files.map(file => file.path);
+
+    const listing = await Property.create({
+      title,
+      price,
+      location,
+      description,
+      amenities: parsedAmenities,
+      images: imageUrls,
+      ownerId,
+      propertyType,
+      availableFrom: availableFrom ? new Date(availableFrom) : undefined,
+      bedrooms: bedrooms ? Number(bedrooms) : 0,
+      bathrooms: bathrooms ? Number(bathrooms) : 0,
+      elevator: elevator === 'true' || elevator === true,
+      sqfeet: Number(sqfeet)
     });
-  } catch (error) {
-    next(error);
+
+    res.status(201).json(listing);
+  } catch (err) {
+    next(err);
   }
 };
+
 
 const updateProperty = async (req, res, next) => {
   const propertyId = req.params.id;
@@ -90,7 +119,7 @@ const updateProperty = async (req, res, next) => {
 
 const deleteProperty = async (req, res, next) => {
   const propertyId = req.params.id;
-  const { ownerId } = req.body;
+  const ownerId = req.headers['owner-id'];
 
   if (!mongoose.Types.ObjectId.isValid(propertyId)) {
     return next(errorHandler(400, "Invalid property ID"));
@@ -155,9 +184,9 @@ const getAllProperties = async (req, res, next) => {
 
     let filter = {};
 
-    // Search filter (title, location, description)
+
     if (search) {
-      const regex = new RegExp(search, "i"); // case-insensitive
+      const regex = new RegExp(search, "i"); 
       filter.$or = [
         { title: regex },
         { location: regex },
@@ -165,14 +194,14 @@ const getAllProperties = async (req, res, next) => {
       ];
     }
 
-    // Price filter
+
     if (minPrice || maxPrice) {
       filter.price = {};
       if (minPrice) filter.price.$gte = Number(minPrice);
       if (maxPrice) filter.price.$lte = Number(maxPrice);
     }
 
-    // Amenities filter
+
     if (amenities) {
       const amenitiesArray = Array.isArray(amenities)
         ? amenities
